@@ -3,6 +3,7 @@ import 'package:mynotes/views/login_view.dart';
 
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(MaterialApp(
     title: 'Flutter Demo',
     theme: ThemeData(
