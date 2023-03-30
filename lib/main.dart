@@ -19,7 +19,9 @@ void main() async {
     home: const HomePage(),
     routes: {
       "/login/": (context) => const LoginView(),
-      "/register/": (context) => const RegisterView()
+      "/register/": (context) => const RegisterView(),
+      "/verifyEmail/": (context) => const VerifyEmailView(),
+      "/home/": (context) => const HomePage()
     },
   ));
 }
@@ -70,8 +72,17 @@ class _NotesViewState extends State<NotesView> {
         title: const Text("Main UI"),
         actions: [
           PopupMenuButton<MenuAction>(
-            onSelected: (value) {
-              devtools.log(value.toString());
+            onSelected: (value) async {
+              switch(value) {
+                case MenuAction.logout:
+                  final showLogout = await showLogoutDialog(context);
+                  devtools.log(showLogout.toString());
+                  if (showLogout) {
+                    FirebaseAuth.instance.signOut();
+                    Navigator.of(context).pushNamedAndRemoveUntil('/home/', (route) => false);
+                  }
+                  break;
+              }
             },
             itemBuilder: (context) {
               return [
@@ -87,4 +98,22 @@ class _NotesViewState extends State<NotesView> {
       body: const Text("Hello world"),
     );
   }
+}
+
+Future<bool> showLogoutDialog(BuildContext context) {
+  return showDialog(context: context, builder: (context) {
+    return AlertDialog(
+      title: const Text("Sign out"),
+      content: const Text("Are you sure?"),
+      actions: [
+        TextButton(onPressed: () {
+          Navigator.of(context).pop(false);
+        }, child: const Text("cancel")),
+        TextButton(onPressed: () {
+          Navigator.of(context).pop(true);
+        }, child: const Text("logout"))
+      ],
+    );
+  },
+  ).then((value) => value ?? false);
 }
