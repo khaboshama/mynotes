@@ -21,7 +21,7 @@ void main() async {
       "/login/": (context) => const LoginView(),
       "/register/": (context) => const RegisterView(),
       "/verifyEmail/": (context) => const VerifyEmailView(),
-      "/home/": (context) => const HomePage()
+      "/notes/": (context) => const NotesView()
     },
   ));
 }
@@ -79,7 +79,7 @@ class _NotesViewState extends State<NotesView> {
                   devtools.log(showLogout.toString());
                   if (showLogout) {
                     FirebaseAuth.instance.signOut();
-                    Navigator.of(context).pushNamedAndRemoveUntil('/home/', (route) => false);
+                    Navigator.of(context).pushNamedAndRemoveUntil('/login/', (route) => false);
                   }
                   break;
               }

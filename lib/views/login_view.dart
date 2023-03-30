@@ -60,7 +60,7 @@ class _LoginViewState extends State<LoginView> {
                     .signInWithEmailAndPassword(
                     email: email, password: password);
                 print(userCredential);
-                Navigator.of(context).pushNamedAndRemoveUntil('/home/', (route) => false);
+                Navigator.of(context).pushNamedAndRemoveUntil('/notes/', (route) => false);
               } on FirebaseAuthException catch (e) {
                 if (e.code == 'invalid-email') {
                   print("please enter a valid email");
