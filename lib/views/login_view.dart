@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:mynotes/constants/routes.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({Key? key}) : super(key: key);
@@ -60,7 +61,7 @@ class _LoginViewState extends State<LoginView> {
                     .signInWithEmailAndPassword(
                     email: email, password: password);
                 print(userCredential);
-                Navigator.of(context).pushNamedAndRemoveUntil('/notes/', (route) => false);
+                Navigator.of(context).pushNamedAndRemoveUntil(notesRoute, (route) => false);
               } on FirebaseAuthException catch (e) {
                 if (e.code == 'invalid-email') {
                   print("please enter a valid email");
@@ -73,7 +74,7 @@ class _LoginViewState extends State<LoginView> {
             child: const Text("Login"),
           ),
           TextButton(onPressed: () {
-            Navigator.of(context).pushNamedAndRemoveUntil("/register/", (route) => false);
+            Navigator.of(context).pushNamedAndRemoveUntil(loginRoute, (route) => false);
           }, child: const Text("Not registered yet? Register here!"))
         ],
       ),
