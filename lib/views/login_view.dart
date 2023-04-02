@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mynotes/constants/routes.dart';
 
+import '../utils/show_error_dialog.dart';
+
 class LoginView extends StatefulWidget {
   const LoginView({Key? key}) : super(key: key);
 
@@ -64,17 +66,19 @@ class _LoginViewState extends State<LoginView> {
                 Navigator.of(context).pushNamedAndRemoveUntil(notesRoute, (route) => false);
               } on FirebaseAuthException catch (e) {
                 if (e.code == 'invalid-email') {
-                  print("please enter a valid email");
+                  await showErrorDialog(context, "please enter a valid email");
                 } else {
-                  print("Something bad happened");
+                  await showErrorDialog(context, "${e.code} Something bad happened");
                 }
                 print(e.code);
+              } catch (e) {
+                await showErrorDialog(context, "${e.toString()} Something bad happened");
               }
             },
             child: const Text("Login"),
           ),
           TextButton(onPressed: () {
-            Navigator.of(context).pushNamedAndRemoveUntil(loginRoute, (route) => false);
+            Navigator.of(context).pushNamedAndRemoveUntil(registerRoute, (route) => false);
           }, child: const Text("Not registered yet? Register here!"))
         ],
       ),
