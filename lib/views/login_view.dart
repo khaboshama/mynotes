@@ -1,7 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mynotes/constants/routes.dart';
+import 'package:mynotes/services/auth/auth_service.dart';
 
+import '../services/auth/auth_exception.dart';
 import '../utils/show_error_dialog.dart';
 
 class LoginView extends StatefulWidget {
@@ -59,20 +60,21 @@ class _LoginViewState extends State<LoginView> {
               final email = _email.text;
               final password = _password.text;
               try {
-                final userCredential = await FirebaseAuth.instance
-                    .signInWithEmailAndPassword(
-                    email: email, password: password);
+                final userCredential = await AuthService.firebase()
+                    .logIn(email: email, password: password);
                 print(userCredential);
-                Navigator.of(context).pushNamedAndRemoveUntil(notesRoute, (route) => false);
-              } on FirebaseAuthException catch (e) {
-                if (e.code == 'invalid-email') {
-                  await showErrorDialog(context, "please enter a valid email");
+
+                if (AuthService.firebase().currentUser?.emailVerified == true) {
+                  Navigator.of(context).pushNamedAndRemoveUntil(notesRoute, (route) => false);
                 } else {
-                  await showErrorDialog(context, "${e.code} Something bad happened");
+                  Navigator.of(context).pushNamedAndRemoveUntil(verifyEmailRoute, (route) => true);
                 }
-                print(e.code);
-              } catch (e) {
-                await showErrorDialog(context, "${e.toString()} Something bad happened");
+              } on UserNotFoundAuthException {
+                await showErrorDialog(context, "please enter a valid email");
+              } on WrongPasswordAuthException {
+                await showErrorDialog(context, "Wrong credential");
+              } on GenericAuthException {
+                await showErrorDialog(context, "Auth error");
               }
             },
             child: const Text("Login"),
