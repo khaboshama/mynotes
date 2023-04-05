@@ -26,47 +26,59 @@ class _NotesViewState extends State<NotesView> {
   }
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Your Notes"),
-        actions: [
-          IconButton(onPressed: () {
-            Navigator.of(context).pushNamedAndRemoveUntil(addNoteRoute, (route) => true);
-          }, icon: const Icon(Icons.add)),
-          PopupMenuButton<MenuAction>(
-            onSelected: (value) async {
-              switch (value) {
-                case MenuAction.logout:
-                  final showLogout = await showLogoutDialog(context);
-                  if (showLogout) {
-                    AuthService.firebase().logout();
-                    Navigator.of(context)
-                        .pushNamedAndRemoveUntil(loginRoute, (route) => false);
+    return FutureBuilder(
+      future: _notesService.getAllNotes(),
+      builder: (context, snapshot) {
+        switch(snapshot.connectionState) {
+          case ConnectionState.done:
+          case ConnectionState.active:
+            print("ConnectionState ${snapshot.data?.length}");
+            break;
+        }
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text("Your Notes"),
+            actions: [
+              IconButton(onPressed: () {
+                Navigator.of(context).pushNamedAndRemoveUntil(addNoteRoute, (route) => true);
+              }, icon: const Icon(Icons.add)),
+              PopupMenuButton<MenuAction>(
+                onSelected: (value) async {
+                  switch (value) {
+                    case MenuAction.logout:
+                      final showLogout = await showLogoutDialog(context);
+                      if (showLogout) {
+                        AuthService.firebase().logout();
+                        Navigator.of(context)
+                            .pushNamedAndRemoveUntil(loginRoute, (route) => false);
+                      }
+                      break;
                   }
-                  break;
+                },
+                itemBuilder: (context) {
+                  return [
+                    const PopupMenuItem<MenuAction>(
+                      value: MenuAction.logout,
+                      child: Text("Logout"),
+                    )
+                  ];
+                },
+              )
+            ],
+          ),
+          body: FutureBuilder(
+            future: _notesService.getOrCreateUser(email: userEmail),
+            builder: (context, snapshot) {
+              switch(snapshot.connectionState) {
+                case ConnectionState.waiting:
+                case ConnectionState.active:
+                  return const Text("waiting list note...");
+                default:
+                  return const CircularProgressIndicator();
               }
-            },
-            itemBuilder: (context) {
-              return [
-                const PopupMenuItem<MenuAction>(
-                  value: MenuAction.logout,
-                  child: Text("Logout"),
-                )
-              ];
-            },
-          )
-        ],
-      ),
-      body: FutureBuilder(
-        future: _notesService.getOrCreateUser(email: userEmail),
-        builder: (context, snapshot) {
-          switch(snapshot.connectionState) {
-            case ConnectionState.waiting:
-              return const Text("waiting list note...");
-            default:
-              return const CircularProgressIndicator();
-          }
-        }),
+            }),
+        );
+      }
     );
   }
 

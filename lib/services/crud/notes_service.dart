@@ -116,22 +116,24 @@ class NotesService {
 
 
   // notes
-  Future<DatabaseNote> createNote({required DatabaseUser owner}) async {
+  Future<DatabaseNote> createNote({
+    required DatabaseUser owner,
+    required String text,
+  }) async {
     await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final dbUser = await getUser(email: owner.email);
     if (dbUser != owner) throw CouldNotFindUser();
 
-    const text = '';
     final noteId = await db.insert(
         noteTable,
         {
           userIdColumn: owner.id,
           textColumn : text,
-          isSyncedWithCloudColumn: 1
+          isSyncedToCloudColumn: 1
         }
     );
-    final note = DatabaseNote(id: noteId, userId: owner.id, text: text, isSyncedWithCloud: true);
+    final note = DatabaseNote(id: noteId, userId: owner.id, text: text, isSyncedToCloud: true);
     _notes.add(note);
     _notesStreamController.add(_notes);
     return note;
@@ -189,8 +191,11 @@ class NotesService {
     await getNote(id: id);
     final notesCount = await db.update(noteTable, {
       textColumn: text,
-      isSyncedWithCloudColumn: 0,
-    });
+      isSyncedToCloudColumn: 0,
+    },
+        where: "id = ?",
+        whereArgs: [id]
+    );
     if (notesCount == 0) CouldNotUpdateNote();
     final updatedNote =  await getNote(id: id);
     _notes.removeWhere((note) => note.id == updatedNote.id);
@@ -209,12 +214,12 @@ class NotesService {
 const databaseName = 'notes.db';
 const noteTable = 'note';
 const userTable = 'user';
-const createUserTable = '''CREATE TABLE "user" (
+const createUserTable = '''CREATE TABLE IF NOT EXISTS "$userTable" (
         "id"	INTEGER NOT NULL,
         "email"	TEXT NOT NULL UNIQUE,
         PRIMARY KEY("id")
       );''';
-const createNoteTable = '''CREATE TABLE "note" (
+const createNoteTable = '''CREATE TABLE IF NOT EXISTS "$noteTable" (
         "id"	INTEGER NOT NULL,
         "user_id"	INTEGER NOT NULL,
         "text"	TEXT,
