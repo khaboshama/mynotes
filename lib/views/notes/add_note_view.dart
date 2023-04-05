@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mynotes/constants/routes.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
 import 'package:mynotes/services/crud/note_database.dart';
 import 'package:mynotes/services/crud/notes_service.dart';
+
+import '../../utils/show_loading_dialog.dart';
 
 class AddNoteView extends StatefulWidget {
   const AddNoteView({Key? key}) : super(key: key);
@@ -51,33 +52,13 @@ class _AddNoteViewState extends State<AddNoteView> {
           TextButton(
               onPressed: () async {
                 if (userNote.isEmpty) return;
-                _showLoadingDialog();
+                showLoadingDialog(context);
                 await addNote();
-                Navigator.pop(context);
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                    notesRoute, (route) => false);
+                Navigator.of(context).pop(false);
+                Navigator.of(context).pop(true);
               }, child: const Text('Add'))
         ],
       ),
-    );
-  }
-
-  void _showLoadingDialog() {
-    AlertDialog alert = AlertDialog(
-      content: Row(children: [
-        const CircularProgressIndicator(
-          backgroundColor: Colors.red,
-        ),
-        Container(margin: const EdgeInsets.only(left: 10),
-          child: const Text("Loading..."),),
-      ]),
-    );
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
     );
   }
 }

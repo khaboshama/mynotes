@@ -1,7 +1,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
+import 'package:mynotes/services/crud/note_database.dart';
 import 'package:mynotes/services/crud/notes_service.dart';
+import 'package:mynotes/utils/show_loading_dialog.dart';
 
 import '../../constants/routes.dart';
 import '../../enums/menu_action.dart';
@@ -29,12 +31,6 @@ class _NotesViewState extends State<NotesView> {
     return FutureBuilder(
       future: _notesService.getAllNotes(),
       builder: (context, snapshot) {
-        switch(snapshot.connectionState) {
-          case ConnectionState.done:
-          case ConnectionState.active:
-            print("ConnectionState ${snapshot.data?.length}");
-            break;
-        }
         return Scaffold(
           appBar: AppBar(
             title: const Text("Your Notes"),
@@ -69,12 +65,67 @@ class _NotesViewState extends State<NotesView> {
           body: FutureBuilder(
             future: _notesService.getOrCreateUser(email: userEmail),
             builder: (context, snapshot) {
+              print("hello ${snapshot.data}");
               switch(snapshot.connectionState) {
                 case ConnectionState.waiting:
                 case ConnectionState.active:
                   return const Text("waiting list note...");
+                case ConnectionState.done:
+                  return StreamBuilder(
+                    stream: _notesService.allNotes,
+                    builder: (context, snapshot) {
+                      switch(snapshot.connectionState) {
+                        case ConnectionState.waiting:
+                        case ConnectionState.active:
+                          print("our data ${snapshot.data?.length}");
+                          if (snapshot.hasData) {
+                            final allNotes = snapshot.data as List<DatabaseNote>;
+                            return ListView.builder(
+                              itemCount: allNotes.length,
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(allNotes[index].text),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.delete
+                                        ),
+                                        onPressed: () async {
+                                          deleteNote(allNotes[index].id);
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                },
+                            );
+                          } else {
+                            return const Text("Notes are empty");
+                          }
+                        case ConnectionState.done:
+                          print("done our data ${snapshot.data?.length}");
+                          if (snapshot.hasData) {
+                            final allNotes = snapshot.data as List<DatabaseNote>;
+                            return ListView.builder(
+                              itemCount: allNotes.length,
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(allNotes[index].text),
+                                );
+                              },
+                            );
+                          } else {
+                            return const Text("Notes are empty");
+                          }
+                        default:
+                          return const CircularProgressIndicator(color: Colors.black,);
+                      }
+                    }
+                  );
                 default:
-                  return const CircularProgressIndicator();
+                  return const CircularProgressIndicator(color: Colors.brown,);
               }
             }),
         );
@@ -82,9 +133,9 @@ class _NotesViewState extends State<NotesView> {
     );
   }
 
-  @override
-  void dispose() {
-    _notesService.close();
-    super.dispose();
+  Future<void> deleteNote(int id) async {
+    showLoadingDialog(context);
+    await _notesService.deleteNote(id: id);
+    Navigator.of(context).pop(false);
   }
 }
