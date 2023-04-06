@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
 import 'package:mynotes/services/crud/note_database.dart';
 import 'package:mynotes/services/crud/notes_service.dart';
-import 'package:mynotes/utils/show_loading_dialog.dart';
 
 import '../../constants/routes.dart';
 import '../../enums/menu_action.dart';
 import '../../main.dart';
+import 'note_list_view.dart';
 
 class NotesView extends StatefulWidget {
   const NotesView({Key? key}) : super(key: key);
@@ -80,27 +80,7 @@ class _NotesViewState extends State<NotesView> {
                           print("our data ${snapshot.data?.length}");
                           if (snapshot.hasData) {
                             final allNotes = snapshot.data as List<DatabaseNote>;
-                            return ListView.builder(
-                              itemCount: allNotes.length,
-                              itemBuilder: (context, index) {
-                                return ListTile(
-                                  title: Text(allNotes[index].text),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete
-                                        ),
-                                        onPressed: () async {
-                                          deleteNote(allNotes[index].id);
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                );
-                                },
-                            );
+                            return NoteListView(allNotes: allNotes);
                           } else {
                             return const Text("Notes are empty");
                           }
@@ -108,14 +88,7 @@ class _NotesViewState extends State<NotesView> {
                           print("done our data ${snapshot.data?.length}");
                           if (snapshot.hasData) {
                             final allNotes = snapshot.data as List<DatabaseNote>;
-                            return ListView.builder(
-                              itemCount: allNotes.length,
-                              itemBuilder: (context, index) {
-                                return ListTile(
-                                  title: Text(allNotes[index].text),
-                                );
-                              },
-                            );
+                            return NoteListView(allNotes: allNotes);
                           } else {
                             return const Text("Notes are empty");
                           }
@@ -131,11 +104,5 @@ class _NotesViewState extends State<NotesView> {
         );
       }
     );
-  }
-
-  Future<void> deleteNote(int id) async {
-    showLoadingDialog(context);
-    await _notesService.deleteNote(id: id);
-    Navigator.of(context).pop(false);
   }
 }
