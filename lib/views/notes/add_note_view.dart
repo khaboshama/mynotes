@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
-import 'package:mynotes/services/crud/note_database.dart';
-import 'package:mynotes/services/crud/notes_service.dart';
+import 'package:mynotes/services/cloud/cloud_note.dart';
+import 'package:mynotes/services/cloud/firebase_cloud_storage.dart';
 
 import '../../utils/show_loading_dialog.dart';
 
@@ -13,35 +13,40 @@ class AddNoteView extends StatefulWidget {
 }
 
 class _AddNoteViewState extends State<AddNoteView> {
-  DatabaseNote? _note;
-  late final NotesService _notesService;
+  CloudNote? _note;
+  late final FirebaseCloudStorage _notesService;
   bool _isUpdatedMode = false;
   final TextEditingController _controller = TextEditingController();
 
   @override
   void initState() {
-    _notesService = NotesService();
+    _notesService = FirebaseCloudStorage();
     super.initState();
   }
 
-  Future<DatabaseNote> addNote() async {
+  Future<CloudNote> addNote() async {
     final existingNote = _note;
     if (existingNote != null) return existingNote;
     final currentUser = AuthService
         .firebase()
         .currentUser!;
-    final email = currentUser.email;
-    final owner = await _notesService.getUser(email: email);
-    return await _notesService.createNote(owner: owner, text: _controller.text);
+    final currentUserId = currentUser.id;
+    return await _notesService.createNewNote(
+        ownerUserId: currentUserId,
+        content: _controller.text
+    );
   }
 
-  Future<DatabaseNote> updateNote() async {
-    return await _notesService.updateNote(id: _note!.id, text: _controller.text);
+  void updateNote() async {
+    await _notesService.updateNote(
+        documentId: _note!.documentId,
+        text: _controller.text
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    _note = ModalRoute.of(context)!.settings.arguments as DatabaseNote?;
+    _note = ModalRoute.of(context)!.settings.arguments as CloudNote?;
     if (_note != null) {
       _controller.text = _note!.text;
       _isUpdatedMode = true;
@@ -65,7 +70,7 @@ class _AddNoteViewState extends State<AddNoteView> {
                 if (_controller.text.isEmpty) return;
                 showLoadingDialog(context);
                 if (_isUpdatedMode) {
-                  await updateNote();
+                   updateNote();
                 } else {
                   await addNote();
                 }

@@ -12,6 +12,7 @@ import 'crud_exceptions.dart';
 
 class NotesService {
   Database? _db;
+
   DatabaseUser? _user;
 
   static final NotesService _share = NotesService._shareInstance();
