@@ -78,7 +78,7 @@ class _NotesViewState extends State<NotesView> {
                         case ConnectionState.waiting:
                         case ConnectionState.active:
                           print("our data ${snapshot.data?.length}");
-                          if (snapshot.hasData) {
+                          if (snapshot.hasData && snapshot.data?.isNotEmpty == true) {
                             final allNotes = snapshot.data as List<DatabaseNote>;
                             return NoteListView(allNotes: allNotes);
                           } else {

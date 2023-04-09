@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mynotes/constants/routes.dart';
 import 'package:mynotes/services/crud/note_database.dart';
 
 import '../../services/crud/notes_service.dart';
@@ -6,7 +7,7 @@ import '../../utils/show_loading_dialog.dart';
 
 class NoteListView extends StatefulWidget {
   final List<DatabaseNote> allNotes;
-   const NoteListView({required this.allNotes, Key? key}) : super(key: key);
+  const NoteListView({required this.allNotes, Key? key}) : super(key: key);
 
   @override
   State<NoteListView> createState() => _NoteListViewState();
@@ -32,15 +33,20 @@ class _NoteListViewState extends State<NoteListView> {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: const Icon(
-                    Icons.delete
-                ),
+                icon: const Icon(Icons.delete),
                 onPressed: () async {
                   deleteNote(widget.allNotes[index].id);
                 },
               ),
             ],
           ),
+          onTap: () {
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              addNoteRoute,
+              (route) => true,
+              arguments: widget.allNotes[index],
+            );
+          },
         );
       },
     );
@@ -52,4 +58,3 @@ class _NoteListViewState extends State<NoteListView> {
     Navigator.of(context).pop(false);
   }
 }
-

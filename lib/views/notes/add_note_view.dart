@@ -13,9 +13,10 @@ class AddNoteView extends StatefulWidget {
 }
 
 class _AddNoteViewState extends State<AddNoteView> {
-  String userNote = "";
   DatabaseNote? _note;
   late final NotesService _notesService;
+  bool _isUpdatedMode = false;
+  final TextEditingController _controller = TextEditingController();
 
   @override
   void initState() {
@@ -31,11 +32,23 @@ class _AddNoteViewState extends State<AddNoteView> {
         .currentUser!;
     final email = currentUser.email!;
     final owner = await _notesService.getUser(email: email);
-    return await _notesService.createNote(owner: owner, text: userNote);
+    return await _notesService.createNote(owner: owner, text: _controller.text);
+  }
+
+  Future<DatabaseNote> updateNote() async {
+    return await _notesService.updateNote(id: _note!.id, text: _controller.text);
   }
 
   @override
   Widget build(BuildContext context) {
+    _note = ModalRoute.of(context)!.settings.arguments as DatabaseNote?;
+    if (_note != null) {
+      _controller.text = _note!.text;
+      _isUpdatedMode = true;
+    } else {
+      _controller.text = "";
+      _isUpdatedMode = false;
+    }
     return Scaffold(
       appBar: AppBar(title: const Text("Add Note"),),
       body: Column(
@@ -45,15 +58,17 @@ class _AddNoteViewState extends State<AddNoteView> {
               border: OutlineInputBorder(),
               hintText: "Enter your note",
             ),
-            onChanged: (text) {
-              userNote = text;
-            },
+            controller: _controller,
           ),
           TextButton(
               onPressed: () async {
-                if (userNote.isEmpty) return;
+                if (_controller.text.isEmpty) return;
                 showLoadingDialog(context);
-                await addNote();
+                if (_isUpdatedMode) {
+                  await updateNote();
+                } else {
+                  await addNote();
+                }
                 Navigator.of(context).pop(false);
                 Navigator.of(context).pop(true);
               }, child: const Text('Add'))

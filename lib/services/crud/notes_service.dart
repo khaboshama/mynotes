@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:mynotes/extension/list/filter.dart';
+import 'package:mynotes/services/auth/auth_exception.dart';
 import 'package:mynotes/services/crud/note_database.dart';
 import 'package:mynotes/services/crud/user_database.dart';
 import 'package:path/path.dart';
@@ -10,6 +12,7 @@ import 'crud_exceptions.dart';
 
 class NotesService {
   Database? _db;
+  DatabaseUser? _user;
 
   static final NotesService _share = NotesService._shareInstance();
   NotesService._shareInstance() {
@@ -24,7 +27,12 @@ class NotesService {
   List<DatabaseNote> _notes = [];
   late final StreamController<List<DatabaseNote>> _notesStreamController;
 
-  Stream<List<DatabaseNote>> get allNotes => _notesStreamController.stream;
+  Stream<List<DatabaseNote>> get allNotes =>
+      _notesStreamController.stream.filter((note) {
+        final currentUser = _user;
+        if (currentUser == null) throw UserShouldBeSetBeforeReadingAllNotes();
+        return note.userId == currentUser.id;
+      });
 
   Future<void> _ensureDbIsOpen() async {
     try {
@@ -109,12 +117,18 @@ class NotesService {
     throw CouldNotFindUser();
   }
 
-  Future<DatabaseUser> getOrCreateUser({required String email}) async {
+  Future<DatabaseUser> getOrCreateUser({
+    required String email,
+    bool setAsCurrentUser = true,
+  }) async {
     try {
       final user = await getUser(email: email);
+      if (setAsCurrentUser) _user = user;
       return user;
     } on CouldNotFindUser {
-      return await createUser(email: email);
+      final currentUser = await createUser(email: email);
+      if (setAsCurrentUser) _user = currentUser;
+      return currentUser;
     } catch (_) {
       rethrow;
     }
