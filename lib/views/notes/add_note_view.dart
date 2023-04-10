@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
 import 'package:mynotes/services/cloud/cloud_note.dart';
 import 'package:mynotes/services/cloud/firebase_cloud_storage.dart';
+import 'package:mynotes/utils/cannot_share_empty_note_dialog.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../utils/show_loading_dialog.dart';
 
@@ -27,21 +29,15 @@ class _AddNoteViewState extends State<AddNoteView> {
   Future<CloudNote> addNote() async {
     final existingNote = _note;
     if (existingNote != null) return existingNote;
-    final currentUser = AuthService
-        .firebase()
-        .currentUser!;
+    final currentUser = AuthService.firebase().currentUser!;
     final currentUserId = currentUser.id;
     return await _notesService.createNewNote(
-        ownerUserId: currentUserId,
-        content: _controller.text
-    );
+        ownerUserId: currentUserId, content: _controller.text);
   }
 
   void updateNote() async {
     await _notesService.updateNote(
-        documentId: _note!.documentId,
-        text: _controller.text
-    );
+        documentId: _note!.documentId, text: _controller.text);
   }
 
   @override
@@ -55,7 +51,22 @@ class _AddNoteViewState extends State<AddNoteView> {
       _isUpdatedMode = false;
     }
     return Scaffold(
-      appBar: AppBar(title: const Text("Add Note"),),
+      appBar: AppBar(
+        title: const Text("Add Note"),
+        actions: [
+          IconButton(
+            onPressed: () {
+              final text = _controller.text;
+              if (text.isEmpty) {
+                showCannotShareEmptyNoteDialog(context);
+              } else {
+                Share.share(text);
+              }
+            },
+            icon: const Icon(Icons.share),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           TextField(
@@ -70,13 +81,14 @@ class _AddNoteViewState extends State<AddNoteView> {
                 if (_controller.text.isEmpty) return;
                 showLoadingDialog(context);
                 if (_isUpdatedMode) {
-                   updateNote();
+                  updateNote();
                 } else {
                   await addNote();
                 }
                 Navigator.of(context).pop(false);
                 Navigator.of(context).pop(true);
-              }, child: const Text('Add'))
+              },
+              child: const Text('Add')),
         ],
       ),
     );
