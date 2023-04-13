@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:mynotes/services/auth/auth_user.dart';
 
@@ -12,24 +13,29 @@ class AuthStateLoading extends AuthState {
 
 class AuthStateLoggedIn extends AuthState {
   final AuthUser user;
+
   const AuthStateLoggedIn(this.user);
 }
 
-class AuthStateLoggedInFailure extends AuthState {
-  final Exception exception;
-  const AuthStateLoggedInFailure(this.exception);
+class AuthStateRegistering extends AuthState {
+  final Exception? exception;
+
+  const AuthStateRegistering(this.exception);
 }
 
 class AuthStateNeedsVerification extends AuthState {
   const AuthStateNeedsVerification();
 }
 
-class AuthStateLoggedOut extends AuthState {
+class AuthStateLoggedOut extends AuthState with EquatableMixin{
   final Exception? exception;
-  const AuthStateLoggedOut(this.exception);
-}
+  final bool isLoading;
 
-class AuthStateLoggedOutFailure extends AuthState {
-  final Exception exception;
-  const AuthStateLoggedOutFailure(this.exception);
+  const AuthStateLoggedOut({
+    required this.exception,
+    required this.isLoading,
+  });
+
+  @override
+  List<Object?> get props => [exception, isLoading];
 }
