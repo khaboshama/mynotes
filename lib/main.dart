@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mynotes/constants/routes.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
+import 'package:mynotes/services/auth/firebase_auth_provider.dart';
+import 'package:mynotes/services/bloc/auth_bloc.dart';
+import 'package:mynotes/services/bloc/auth_event.dart';
+import 'package:mynotes/services/bloc/auth_state.dart';
 import 'package:mynotes/views/login_view.dart';
 import 'package:mynotes/views/notes/add_note_view.dart';
 import 'package:mynotes/views/notes/notes_view.dart';
@@ -14,7 +19,10 @@ void main() async {
     theme: ThemeData(
       primarySwatch: Colors.green,
     ),
-    home: const HomePage(),
+    home: BlocProvider<AuthBloc>(
+      create: (context) => AuthBloc(FirebaseAuthProvider()),
+      child: const HomePage(),
+    ),
     routes: {
       loginRoute: (context) => const LoginView(),
       registerRoute: (context) => const RegisterView(),
@@ -30,6 +38,21 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.read<AuthBloc>().add(const AuthEventInitialize());
+    return BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
+      if (state is AuthStateLoggedIn) {
+        return const NotesView();
+      } else if (state is AuthStateNeedsVerification) {
+        return const VerifyEmailView();
+      } else if (state is AuthStateLoggedOut) {
+        return const LoginView();
+      } else {
+        return const Scaffold(
+          body: CircularProgressIndicator(),
+        );
+      }
+    });
+
     return FutureBuilder(
       future: AuthService.firebase().initialize(),
       builder: (context, snapshot) {
@@ -78,4 +101,3 @@ Future<bool> showLogoutDialog(BuildContext context) {
     },
   ).then((value) => value ?? false);
 }
-

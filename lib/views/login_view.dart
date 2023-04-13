@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mynotes/constants/routes.dart';
-import 'package:mynotes/services/auth/auth_service.dart';
+import 'package:mynotes/services/bloc/auth_bloc.dart';
+import 'package:mynotes/services/bloc/auth_event.dart';
 
 import '../services/auth/auth_exception.dart';
 import '../utils/show_error_dialog.dart';
@@ -13,8 +15,6 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
-
-
   late final TextEditingController _email;
   late final TextEditingController _password;
 
@@ -43,32 +43,37 @@ class _LoginViewState extends State<LoginView> {
             enableSuggestions: false,
             autocorrect: false,
             keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
-                hintText: "Enter your email"),
+            decoration: const InputDecoration(hintText: "Enter your email"),
           ),
           TextField(
             controller: _password,
             obscureText: true,
             enableSuggestions: false,
             autocorrect: false,
-            decoration: const InputDecoration(
-                hintText: "Enter your password"
-            ),
+            decoration: const InputDecoration(hintText: "Enter your password"),
           ),
           TextButton(
             onPressed: () async {
               final email = _email.text;
               final password = _password.text;
               try {
-                final userCredential = await AuthService.firebase()
-                    .logIn(email: email, password: password);
-                print(userCredential);
-
-                if (AuthService.firebase().currentUser?.isEmailVerified == true) {
-                  Navigator.of(context).pushNamedAndRemoveUntil(notesRoute, (route) => false);
-                } else {
-                  Navigator.of(context).pushNamedAndRemoveUntil(verifyEmailRoute, (route) => true);
-                }
+                context.read<AuthBloc>().add(AuthEventLogIn(email, password));
+                // BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
+                //   if (state is AuthStateLoggedIn) {
+                //     if (AuthService.firebase().currentUser?.isEmailVerified ==
+                //         true) {
+                //       Navigator.of(context).pushNamedAndRemoveUntil(
+                //           notesRoute, (route) => false);
+                //     } else {
+                //       Navigator.of(context).pushNamedAndRemoveUntil(
+                //           verifyEmailRoute, (route) => true);
+                //     }
+                //   } else if (state is AuthStateLoginFailure) {
+                //     showErrorDialog(context, (state).exception.toString());
+                //   } else {
+                //     showErrorDialog(context, "Auth error");
+                //   }
+                // });
               } on UserNotFoundAuthException {
                 await showErrorDialog(context, "please enter a valid email");
               } on WrongPasswordAuthException {
@@ -79,9 +84,12 @@ class _LoginViewState extends State<LoginView> {
             },
             child: const Text("Login"),
           ),
-          TextButton(onPressed: () {
-            Navigator.of(context).pushNamedAndRemoveUntil(registerRoute, (route) => false);
-          }, child: const Text("Not registered yet? Register here!"))
+          TextButton(
+              onPressed: () {
+                Navigator.of(context)
+                    .pushNamedAndRemoveUntil(registerRoute, (route) => false);
+              },
+              child: const Text("Not registered yet? Register here!"))
         ],
       ),
     );
