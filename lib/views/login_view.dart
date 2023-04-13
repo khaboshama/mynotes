@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mynotes/constants/routes.dart';
 import 'package:mynotes/services/bloc/auth_bloc.dart';
 import 'package:mynotes/services/bloc/auth_event.dart';
+import 'package:mynotes/services/bloc/auth_state.dart';
 
 import '../services/auth/auth_exception.dart';
 import '../utils/show_error_dialog.dart';
@@ -52,37 +53,26 @@ class _LoginViewState extends State<LoginView> {
             autocorrect: false,
             decoration: const InputDecoration(hintText: "Enter your password"),
           ),
-          TextButton(
-            onPressed: () async {
-              final email = _email.text;
-              final password = _password.text;
-              try {
-                context.read<AuthBloc>().add(AuthEventLogIn(email, password));
-                // BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
-                //   if (state is AuthStateLoggedIn) {
-                //     if (AuthService.firebase().currentUser?.isEmailVerified ==
-                //         true) {
-                //       Navigator.of(context).pushNamedAndRemoveUntil(
-                //           notesRoute, (route) => false);
-                //     } else {
-                //       Navigator.of(context).pushNamedAndRemoveUntil(
-                //           verifyEmailRoute, (route) => true);
-                //     }
-                //   } else if (state is AuthStateLoginFailure) {
-                //     showErrorDialog(context, (state).exception.toString());
-                //   } else {
-                //     showErrorDialog(context, "Auth error");
-                //   }
-                // });
-              } on UserNotFoundAuthException {
-                await showErrorDialog(context, "please enter a valid email");
-              } on WrongPasswordAuthException {
-                await showErrorDialog(context, "Wrong credential");
-              } on GenericAuthException {
-                await showErrorDialog(context, "Auth error");
+          BlocListener<AuthBloc, AuthState>(
+            listener: (context, state) async {
+              if(state is AuthStateLoggedInFailure) {
+                if (state.exception is UserNotFoundAuthException) {
+                  await showErrorDialog(context, 'User not found');
+                } else if (state.exception is WrongPasswordAuthException) {
+                  await showErrorDialog(context, 'Wrong credentials');
+                } else if (state.exception is GenericAuthException) {
+                  await showErrorDialog(context, 'Authentication error');
+                }
               }
             },
-            child: const Text("Login"),
+            child: TextButton(
+              onPressed: () async {
+                final email = _email.text;
+                final password = _password.text;
+                  context.read<AuthBloc>().add(AuthEventLogIn(email, password));
+              },
+              child: const Text("Login"),
+            ),
           ),
           TextButton(
               onPressed: () {
