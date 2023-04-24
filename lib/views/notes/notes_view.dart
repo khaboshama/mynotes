@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mynotes/extension/list/buildContext/loc.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
 import 'package:mynotes/services/bloc/auth_bloc.dart';
 import 'package:mynotes/services/bloc/auth_event.dart';
@@ -11,6 +12,10 @@ import '../../constants/routes.dart';
 import '../../enums/menu_action.dart';
 import '../../main.dart';
 import 'note_list_view.dart';
+
+extension Count<T extends Iterable> on Stream<T> {
+  Stream<int> get getLength => map((event) => event.length);
+}
 
 class NotesView extends StatefulWidget {
   const NotesView({Key? key}) : super(key: key);
@@ -31,12 +36,19 @@ class _NotesViewState extends State<NotesView> {
   }
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _notesService.getNotes(ownerUserId: AuthService.firebase().currentUser!.id),
-      builder: (context, snapshot) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text("Your Notes"),
+            title:  StreamBuilder<int>(
+              stream: _notesService.allNotes(ownerUserId: AuthService.firebase().currentUser!.id).getLength,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  final countNotes = snapshot.data ?? 0;
+                  return Text(context.loc.notes_title(countNotes));
+                } else {
+                  return const Text("Your Notes");
+                }
+              }
+            ),
             actions: [
               IconButton(onPressed: () {
                 Navigator.of(context).pushNamedAndRemoveUntil(addNoteRoute, (route) => true);
@@ -90,7 +102,7 @@ class _NotesViewState extends State<NotesView> {
               }
           ),
         );
-      }
-    );
+
+
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:mynotes/constants/routes.dart';
+import 'package:mynotes/extension/list/buildContext/loc.dart';
 import 'package:mynotes/services/auth/firebase_auth_provider.dart';
 import 'package:mynotes/services/bloc/auth_bloc.dart';
 import 'package:mynotes/services/bloc/auth_event.dart';
@@ -14,7 +16,9 @@ import 'package:mynotes/views/verify_email.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(MaterialApp(
-    title: 'Flutter Demo',
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    title: "Flutter demo",
     theme: ThemeData(
       primarySwatch: Colors.green,
     ),
@@ -22,9 +26,7 @@ void main() async {
       create: (context) => AuthBloc(FirebaseAuthProvider()),
       child: const HomePage(),
     ),
-    routes: {
-      addNoteRoute: (context) => const AddNoteView()
-    },
+    routes: {addNoteRoute: (context) => const AddNoteView()},
   ));
 }
 
@@ -52,15 +54,14 @@ class HomePage extends StatelessWidget {
   }
 }
 
-
-
 Future<bool> showLogoutDialog(BuildContext context) {
   return showDialog(
     context: context,
     builder: (context) {
+      final titleDialog = context.loc.sign_out_btn;
       return AlertDialog(
-        title: const Text("Sign out"),
-        content: const Text("Are you sure?"),
+        title: Text(titleDialog),
+        content: Text(context.loc.are_you_sure),
         actions: [
           TextButton(
               onPressed: () {
